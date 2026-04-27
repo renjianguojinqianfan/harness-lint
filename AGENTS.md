@@ -4,16 +4,16 @@
 
 ## 1. Project Snapshot
 
-**harness-lint** — 
+**harness-lint** — PBH 生态的第一个果实工具：AI 生成代码缺陷静态检查器
 
-**Maintainer**: harness-init
+**Maintainer**: renjianguojinqianfan
 **Type**: cli
 
 ## 2. Quick Start (30 seconds)
 
 1. Run `make verify` — confirm your environment is working
 2. Run the test command — ensure existing tests pass
-3. Locate the entry point — understand how the program runs
+3. Run `harness-lint --help` — see available options
 
 ## 3. Multi-Agent Notice
 

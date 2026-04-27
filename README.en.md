@@ -1,5 +1,6 @@
 # harness-lint
 
+> PBH ecosystem's first fruit — a static checker that catches typical bad habits in AI-generated code.
 
 
 ## Quick Start
