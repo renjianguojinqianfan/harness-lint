@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 
+from harness_lint.accumulator import PatternWarning
 from harness_lint.rules.base import Violation
 
 # ANSI color escape codes
@@ -42,7 +43,12 @@ def _count_severities(violations: list[Violation]) -> dict[str, int]:
     return counts
 
 
-def format_terminal(violations: list[Violation], files_checked: int) -> str:
+def format_terminal(
+    violations: list[Violation],
+    files_checked: int,
+    pattern_warnings: list[PatternWarning] | None = None,
+    phase: str | None = None,
+) -> str:
     """Format violations as a human-readable terminal string.
 
     Violations are grouped by file path. Each violation shows its
@@ -52,15 +58,30 @@ def format_terminal(violations: list[Violation], files_checked: int) -> str:
     Args:
         violations: List of violations to format.
         files_checked: Total number of files that were examined.
+        pattern_warnings: Optional list of pattern-level warnings.
+        phase: Current PBH phase ("execute", "evaluate", or None).
 
     Returns:
         Multi-line string suitable for terminal output.
     """
     if not violations:
-        return (
+        base = (
             f"\x1b[32m✅ 无违规发现{_RESET}\n"
             f"  检查文件数: {files_checked}"
         )
+        if pattern_warnings:
+            lines = [base, "", "⚠️ 模式性偏差："]
+            for pw in pattern_warnings:
+                desc = f"{pw.description}" if pw.description else ""
+                lines.append(f"  {pw.rule_id} {desc}已出现 {pw.count} 次")
+                lines.append(f"  {pw.suggestion}")
+            if phase == "evaluate":
+                lines.append("")
+                lines.append("💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。")
+            return "\n".join(lines)
+        if phase == "evaluate":
+            base += "\n\n💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。"
+        return base
 
     # Group violations by file
     by_file: dict[str, list[Violation]] = defaultdict(list)
@@ -91,19 +112,38 @@ def format_terminal(violations: list[Violation], files_checked: int) -> str:
     lines.append(f"  检查文件数: {files_checked}")
     lines.append(f"  违规文件数: {files_with_violations}")
 
+    if pattern_warnings:
+        lines.append("")
+        lines.append("⚠️ 模式性偏差：")
+        for pw in pattern_warnings:
+            desc = f"{pw.description}" if pw.description else ""
+            lines.append(f"  {pw.rule_id} {desc}已出现 {pw.count} 次")
+            lines.append(f"  {pw.suggestion}")
+
+    if phase == "evaluate":
+        lines.append("")
+        lines.append("💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。")
+
     return "\n".join(lines)
 
 
-def format_json(violations: list[Violation], files_checked: int) -> str:
+def format_json(
+    violations: list[Violation],
+    files_checked: int,
+    pattern_warnings: list[PatternWarning] | None = None,
+    phase: str | None = None,
+) -> str:
     """Format violations as a JSON string.
 
     The JSON structure contains a summary object, a violations array
-    (each item carrying the full attribution chain), and an empty
-    pattern_warnings array for forward compatibility.
+    (each item carrying the full attribution chain), and a
+    pattern_warnings array when elevated rules exist.
 
     Args:
         violations: List of violations to format.
         files_checked: Total number of files that were examined.
+        pattern_warnings: Optional list of pattern-level warnings.
+        phase: Current PBH phase ("execute", "evaluate", or None).
 
     Returns:
         Pretty-printed JSON string.
@@ -127,6 +167,16 @@ def format_json(violations: list[Violation], files_checked: int) -> str:
         for v in violations
     ]
 
+    pw_dicts = [
+        {
+            "rule_id": pw.rule_id,
+            "count": pw.count,
+            "suggestion": pw.suggestion,
+            "description": pw.description,
+        }
+        for pw in (pattern_warnings or [])
+    ]
+
     output = {
         "summary": {
             "errors": counts["Error"],
@@ -136,25 +186,42 @@ def format_json(violations: list[Violation], files_checked: int) -> str:
             "files_with_violations": files_with_violations,
         },
         "violations": violation_dicts,
-        "pattern_warnings": [],
+        "pattern_warnings": pw_dicts,
     }
 
     return json.dumps(output, ensure_ascii=False, indent=2)
 
 
-def format_summary(violations: list[Violation], files_checked: int) -> str:
+def format_summary(
+    violations: list[Violation],
+    files_checked: int,
+    pattern_warnings: list[PatternWarning] | None = None,
+    phase: str | None = None,
+) -> str:
     """Format a compact one-line summary string.
 
     Args:
         violations: List of violations to summarise.
         files_checked: Total number of files that were examined.
+        pattern_warnings: Optional list of pattern-level warnings.
+        phase: Current PBH phase ("execute", "evaluate", or None).
 
     Returns:
         Single-line summary like ``harness-lint: 1 error, 1 warning, ...``.
+        Pattern warnings are appended on separate lines if present.
     """
     counts = _count_severities(violations)
-    return (
+    summary = (
         f"harness-lint: {counts['Error']} error, "
         f"{counts['Warning']} warning, {counts['Info']} info "
         f"(checked {files_checked} files)"
     )
+
+    if pattern_warnings:
+        parts = [
+            f"⚠️ 模式性偏差：{pw.rule_id} {pw.description}出现 {pw.count} 次"
+            for pw in pattern_warnings
+        ]
+        summary += "\n" + "\n".join(parts)
+
+    return summary

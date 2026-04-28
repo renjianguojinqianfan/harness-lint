@@ -143,7 +143,7 @@ class TestPhaseFiltering:
             ],
         )
         context = Context(phase="execute")
-        result = check(str(tmp_path), context, [execute_rule, evaluate_rule])
+        result, _ = check(str(tmp_path), context, [execute_rule, evaluate_rule])
         assert len(result) == 1
         assert result[0].rule_id == "HL001"
 
@@ -193,7 +193,7 @@ class TestPhaseFiltering:
             ],
         )
         context = Context(phase="evaluate")
-        result = check(str(tmp_path), context, [execute_rule, evaluate_rule])
+        result, _ = check(str(tmp_path), context, [execute_rule, evaluate_rule])
         assert len(result) == 1
         assert result[0].rule_id == "HL301"
 
@@ -243,7 +243,7 @@ class TestPhaseFiltering:
             ],
         )
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [execute_rule, evaluate_rule])
+        result, _ = check(str(tmp_path), context, [execute_rule, evaluate_rule])
         assert len(result) == 2
         rule_ids = {v.rule_id for v in result}
         assert rule_ids == {"HL001", "HL301"}
@@ -273,7 +273,7 @@ class TestPhaseFiltering:
             ],
         )
         context = Context(phase="execute")
-        result = check(str(tmp_path), context, [both_rule])
+        result, _ = check(str(tmp_path), context, [both_rule])
         assert len(result) == 1
         assert result[0].rule_id == "HL201"
 
@@ -302,7 +302,7 @@ class TestPhaseFiltering:
             ],
         )
         context = Context(phase="evaluate")
-        result = check(str(tmp_path), context, [both_rule])
+        result, _ = check(str(tmp_path), context, [both_rule])
         assert len(result) == 1
         assert result[0].rule_id == "HL201"
 
@@ -376,7 +376,7 @@ class TestCheckFunction:
             attribution="attr",
         )
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [naming_rule])
+        result, _ = check(str(tmp_path), context, [naming_rule])
         assert len(result) == 2
         files = [v.file for v in result]
         assert files == sorted(files)
@@ -425,7 +425,7 @@ class TestCheckFunction:
             ],
         )
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [rule1, rule2])
+        result, _ = check(str(tmp_path), context, [rule1, rule2])
         assert len(result) == 2
         rule_ids = {v.rule_id for v in result}
         assert rule_ids == {"HL001", "HL002"}
@@ -443,7 +443,7 @@ class TestCheckFunction:
             violations_to_return=None,
         )
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [rule])
+        result, _ = check(str(tmp_path), context, [rule])
         assert result == []
 
     def test_handles_empty_violations_list(self, tmp_path) -> None:
@@ -459,7 +459,7 @@ class TestCheckFunction:
             violations_to_return=[],
         )
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [rule])
+        result, _ = check(str(tmp_path), context, [rule])
         assert result == []
 
     def test_skips_files_with_invalid_syntax(self, tmp_path) -> None:
@@ -491,7 +491,7 @@ class TestCheckFunction:
             attribution="attr",
         )
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [counter])
+        result, _ = check(str(tmp_path), context, [counter])
         assert counter.call_count == 1  # Only good.py
         assert result == []
 
@@ -499,12 +499,44 @@ class TestCheckFunction:
         """Should return empty list when no rules provided."""
         (tmp_path / "a.py").write_text("x = 1\n")
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [])
+        result, _ = check(str(tmp_path), context, [])
         assert result == []
 
     def test_no_py_files_returns_empty_list(self, tmp_path) -> None:
         """Should return empty list when no Python files found."""
         (tmp_path / "readme.txt").write_text("hello")
         context = Context(phase=None)
-        result = check(str(tmp_path), context, [])
+        result, _ = check(str(tmp_path), context, [])
         assert result == []
+
+    def test_returns_pattern_warnings_for_repeated_violations(self, tmp_path) -> None:
+        """Should return pattern warnings when a rule exceeds threshold."""
+        (tmp_path / "a.py").write_text("x = 1\n")
+        rule = FakeRule(
+            rule_id="HL201",
+            name="repeat",
+            severity="Warning",
+            message_template="msg",
+            agente_ref="AGENTS.md §1",
+            attribution="attr",
+            violations_to_return=[
+                Violation(
+                    file=str(tmp_path / "a.py"),
+                    line=1,
+                    column=0,
+                    rule_id="HL201",
+                    severity="Warning",
+                    phenomenon="phen",
+                    attribution="attr",
+                    agente_ref="AGENTS.md §1",
+                )
+                for _ in range(4)
+            ],
+        )
+        context = Context(phase=None)
+        violations, pattern_warnings = check(str(tmp_path), context, [rule])
+        assert len(violations) == 4
+        assert len(pattern_warnings) == 1
+        assert pattern_warnings[0].rule_id == "HL201"
+        assert pattern_warnings[0].count == 4
+        assert "建议在 AGENTS.md §1 中明确相关规范" in pattern_warnings[0].suggestion

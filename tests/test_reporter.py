@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from harness_lint.accumulator import PatternWarning
 from harness_lint.reporter import (
     format_json,
     format_summary,
@@ -100,6 +101,21 @@ class TestFormatTerminal:
         result = format_terminal([], files_checked=3)
         assert "无违规" in result or "No violations" in result or "通过" in result
 
+    def test_evaluate_phase_shows_hint_line(self) -> None:
+        """phase='evaluate' should show the evaluate hint line after summary."""
+        result = format_terminal([], files_checked=3, phase="evaluate")
+        assert "💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。" in result
+
+    def test_none_phase_omits_hint_line(self) -> None:
+        """phase=None should not show the evaluate hint line."""
+        result = format_terminal([], files_checked=3, phase=None)
+        assert "Evaluate 阶段" not in result
+
+    def test_execute_phase_omits_hint_line(self) -> None:
+        """phase='execute' should not show the evaluate hint line."""
+        result = format_terminal([], files_checked=3, phase="execute")
+        assert "Evaluate 阶段" not in result
+
 
 class TestFormatJson:
     """Tests for JSON output formatter."""
@@ -169,6 +185,12 @@ class TestFormatJson:
         assert "pattern_warnings" in parsed
         assert isinstance(parsed["pattern_warnings"], list)
 
+    def test_accepts_phase_parameter(self, sample_violations: list[Violation]) -> None:
+        """format_json should accept phase parameter without error."""
+        result = format_json(sample_violations, files_checked=5, phase="evaluate")
+        parsed = json.loads(result)
+        assert parsed["summary"]["errors"] == 1
+
 
 class TestFormatSummary:
     """Tests for summary output formatter."""
@@ -233,3 +255,130 @@ class TestFormatSummary:
         """Summary should start with 'harness-lint:'."""
         result = format_summary([], files_checked=1)
         assert result.startswith("harness-lint:")
+
+    def test_accepts_phase_parameter(self) -> None:
+        """format_summary should accept phase parameter without error."""
+        result = format_summary([], files_checked=1, phase="evaluate")
+        assert result.startswith("harness-lint:")
+
+
+class TestPatternWarningsTerminal:
+    """Tests for pattern_warnings in terminal output."""
+
+    def test_shows_pattern_warnings_block(self, sample_violations: list[Violation]) -> None:
+        """Terminal output should include pattern_warnings section."""
+        pws = [
+            PatternWarning(
+                rule_id="HL202",
+                count=8,
+                suggestion="建议在 AGENTS.md §5 中明确异常处理规范",
+                description="假异常处理",
+            ),
+        ]
+        result = format_terminal(sample_violations, files_checked=5, pattern_warnings=pws)
+        assert "模式性偏差" in result
+        assert "HL202" in result
+        assert "8 次" in result
+        assert "假异常处理" in result
+        assert "建议在 AGENTS.md §5 中明确异常处理规范" in result
+
+    def test_no_pattern_warnings_omits_block(self, sample_violations: list[Violation]) -> None:
+        """When pattern_warnings is None, no block should appear."""
+        result = format_terminal(sample_violations, files_checked=5, pattern_warnings=None)
+        assert "模式性偏差" not in result
+
+    def test_empty_pattern_warnings_omits_block(self, sample_violations: list[Violation]) -> None:
+        """When pattern_warnings is empty, no block should appear."""
+        result = format_terminal(sample_violations, files_checked=5, pattern_warnings=[])
+        assert "模式性偏差" not in result
+
+
+class TestPatternWarningsJson:
+    """Tests for pattern_warnings in JSON output."""
+
+    def test_populates_pattern_warnings_array(self, sample_violations: list[Violation]) -> None:
+        """JSON should populate pattern_warnings with actual data."""
+        pws = [
+            PatternWarning(
+                rule_id="HL201",
+                count=8,
+                suggestion="建议在 AGENTS.md §5 中明确异常处理规范",
+                description="假异常处理",
+            ),
+        ]
+        result = format_json(sample_violations, files_checked=5, pattern_warnings=pws)
+        parsed = json.loads(result)
+        assert len(parsed["pattern_warnings"]) == 1
+        assert parsed["pattern_warnings"][0]["rule_id"] == "HL201"
+        assert parsed["pattern_warnings"][0]["count"] == 8
+        expected_suggestion = "建议在 AGENTS.md §5 中明确异常处理规范"
+        assert parsed["pattern_warnings"][0]["suggestion"] == expected_suggestion
+        assert parsed["pattern_warnings"][0]["description"] == "假异常处理"
+
+    def test_no_pattern_warnings_defaults_to_empty(
+        self, sample_violations: list[Violation]
+    ) -> None:
+        """When pattern_warnings is None, JSON should have empty array."""
+        result = format_json(sample_violations, files_checked=5, pattern_warnings=None)
+        parsed = json.loads(result)
+        assert parsed["pattern_warnings"] == []
+
+
+class TestPatternWarningsSummary:
+    """Tests for pattern_warnings in summary output."""
+
+    def test_appends_pattern_warnings_to_summary(self, sample_violations: list[Violation]) -> None:
+        """Summary should append pattern warning info when provided."""
+        pws = [
+            PatternWarning(
+                rule_id="HL202",
+                count=8,
+                suggestion="建议在 AGENTS.md §5 中明确异常处理规范",
+                description="假异常处理",
+            ),
+        ]
+        result = format_summary(sample_violations, files_checked=5, pattern_warnings=pws)
+        assert "HL202" in result
+        assert "8 次" in result
+        assert "假异常处理" in result
+        assert "\n" in result  # newline separated, not pipe
+        assert " | " not in result
+
+    def test_no_pattern_warnings_no_extra_text(self, sample_violations: list[Violation]) -> None:
+        """When pattern_warnings is None, summary should not mention them."""
+        result = format_summary(sample_violations, files_checked=5, pattern_warnings=None)
+        assert "HL202" not in result
+        assert "次" not in result
+
+    def test_empty_pattern_warnings_no_extra_text(self, sample_violations: list[Violation]) -> None:
+        """When pattern_warnings is empty, summary should not mention them."""
+        result = format_summary(sample_violations, files_checked=5, pattern_warnings=[])
+        assert "HL202" not in result
+        assert "次" not in result
+
+    def test_multiple_pattern_warnings_newline_separated(
+        self, sample_violations: list[Violation]
+    ) -> None:
+        """Multiple pattern warnings should be separated by newlines."""
+        pws = [
+            PatternWarning(
+                rule_id="HL201",
+                count=3,
+                suggestion="s1",
+                description="函数过长",
+            ),
+            PatternWarning(
+                rule_id="HL202",
+                count=8,
+                suggestion="s2",
+                description="假异常处理",
+            ),
+        ]
+        result = format_summary(sample_violations, files_checked=5, pattern_warnings=pws)
+        lines = result.split("\n")
+        # First line is the harness-lint summary
+        assert lines[0].startswith("harness-lint:")
+        # Pattern warnings on separate lines
+        assert any("HL201" in line for line in lines)
+        assert any("HL202" in line for line in lines)
+        assert " | " not in result

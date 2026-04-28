@@ -7,7 +7,10 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from harness_lint.accumulator import apply_accumulation
+
 if TYPE_CHECKING:
+    from harness_lint.accumulator import PatternWarning
     from harness_lint.rules.base import Rule, Violation
 
 _DEFAULT_IGNORE_DIRS = {
@@ -70,7 +73,9 @@ def _is_rule_active(rule: Rule, phase: str | None) -> bool:
     return phase in rule.phases
 
 
-def check(path: str, context: Context, rules: list[Rule]) -> list[Violation]:
+def check(
+    path: str, context: Context, rules: list[Rule]
+) -> tuple[list[Violation], list[PatternWarning]]:
     """Check all Python files in *path* against activated rules.
 
     Args:
@@ -79,7 +84,9 @@ def check(path: str, context: Context, rules: list[Rule]) -> list[Violation]:
         rules: List of rules to (potentially) apply.
 
     Returns:
-        Sorted list of all violations found across all checked files.
+        Tuple of (sorted violations, pattern warnings). Violations are
+        sorted by file path. Pattern warnings are generated for rules
+        whose violation count meets or exceeds the escalation threshold.
         Invalid Python syntax is silently skipped rather than raising.
     """
     files = collect_files(path)
@@ -103,4 +110,8 @@ def check(path: str, context: Context, rules: list[Rule]) -> list[Violation]:
             if violations:
                 all_violations.extend(violations)
 
-    return sorted(all_violations, key=lambda v: v.file)
+    sorted_violations = sorted(all_violations, key=lambda v: v.file)
+    processed_violations, pattern_warnings = apply_accumulation(
+        sorted_violations, phase=context.phase, rules=active_rules
+    )
+    return processed_violations, pattern_warnings
