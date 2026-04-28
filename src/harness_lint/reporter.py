@@ -43,47 +43,38 @@ def _count_severities(violations: list[Violation]) -> dict[str, int]:
     return counts
 
 
-def format_terminal(
+def _format_empty_terminal(
+    files_checked: int,
+    pattern_warnings: list[PatternWarning] | None,
+    phase: str | None,
+) -> str:
+    """Format terminal output when no violations are found."""
+    base = (
+        f"\x1b[32m✅ 无违规发现{_RESET}\n"
+        f"  检查文件数: {files_checked}"
+    )
+    if pattern_warnings:
+        lines = [base, "", "⚠️ 模式性偏差："]
+        for pw in pattern_warnings:
+            desc = f"{pw.description}" if pw.description else ""
+            lines.append(f"  {pw.rule_id} {desc}已出现 {pw.count} 次")
+            lines.append(f"  {pw.suggestion}")
+        if phase == "evaluate":
+            lines.append("")
+            lines.append("💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。")
+        return "\n".join(lines)
+    if phase == "evaluate":
+        base += "\n\n💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。"
+    return base
+
+
+def _format_violations_terminal(
     violations: list[Violation],
     files_checked: int,
-    pattern_warnings: list[PatternWarning] | None = None,
-    phase: str | None = None,
+    pattern_warnings: list[PatternWarning] | None,
+    phase: str | None,
 ) -> str:
-    """Format violations as a human-readable terminal string.
-
-    Violations are grouped by file path. Each violation shows its
-    position, severity icon, rule ID, phenomenon, attribution, and
-    AGENTS.md reference. A summary block is appended at the end.
-
-    Args:
-        violations: List of violations to format.
-        files_checked: Total number of files that were examined.
-        pattern_warnings: Optional list of pattern-level warnings.
-        phase: Current PBH phase ("execute", "evaluate", or None).
-
-    Returns:
-        Multi-line string suitable for terminal output.
-    """
-    if not violations:
-        base = (
-            f"\x1b[32m✅ 无违规发现{_RESET}\n"
-            f"  检查文件数: {files_checked}"
-        )
-        if pattern_warnings:
-            lines = [base, "", "⚠️ 模式性偏差："]
-            for pw in pattern_warnings:
-                desc = f"{pw.description}" if pw.description else ""
-                lines.append(f"  {pw.rule_id} {desc}已出现 {pw.count} 次")
-                lines.append(f"  {pw.suggestion}")
-            if phase == "evaluate":
-                lines.append("")
-                lines.append("💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。")
-            return "\n".join(lines)
-        if phase == "evaluate":
-            base += "\n\n💡 当前处于 Evaluate 阶段，建议优先完成所有规则固化。"
-        return base
-
-    # Group violations by file
+    """Format terminal output when violations are present."""
     by_file: dict[str, list[Violation]] = defaultdict(list)
     for v in violations:
         by_file[v.file].append(v)
@@ -127,6 +118,66 @@ def format_terminal(
     return "\n".join(lines)
 
 
+def format_terminal(
+    violations: list[Violation],
+    files_checked: int,
+    pattern_warnings: list[PatternWarning] | None = None,
+    phase: str | None = None,
+) -> str:
+    """Format violations as a human-readable terminal string.
+
+    Violations are grouped by file path. Each violation shows its
+    position, severity icon, rule ID, phenomenon, attribution, and
+    AGENTS.md reference. A summary block is appended at the end.
+
+    Args:
+        violations: List of violations to format.
+        files_checked: Total number of files that were examined.
+        pattern_warnings: Optional list of pattern-level warnings.
+        phase: Current PBH phase ("execute", "evaluate", or None).
+
+    Returns:
+        Multi-line string suitable for terminal output.
+    """
+    if not violations:
+        return _format_empty_terminal(files_checked, pattern_warnings, phase)
+    return _format_violations_terminal(
+        violations, files_checked, pattern_warnings, phase
+    )
+
+
+def _build_violation_dicts(violations: list[Violation]) -> list[dict]:
+    """Convert violations to serializable dictionaries."""
+    return [
+        {
+            "file": v.file,
+            "line": v.line,
+            "column": v.column,
+            "rule_id": v.rule_id,
+            "severity": v.severity,
+            "phenomenon": v.phenomenon,
+            "attribution": v.attribution,
+            "agente_ref": v.agente_ref,
+        }
+        for v in violations
+    ]
+
+
+def _build_pw_dicts(
+    pattern_warnings: list[PatternWarning] | None,
+) -> list[dict]:
+    """Convert pattern warnings to serializable dictionaries."""
+    return [
+        {
+            "rule_id": pw.rule_id,
+            "count": pw.count,
+            "suggestion": pw.suggestion,
+            "description": pw.description,
+        }
+        for pw in (pattern_warnings or [])
+    ]
+
+
 def format_json(
     violations: list[Violation],
     files_checked: int,
@@ -149,33 +200,7 @@ def format_json(
         Pretty-printed JSON string.
     """
     counts = _count_severities(violations)
-
-    # Count unique files with violations
     files_with_violations = len({v.file for v in violations})
-
-    violation_dicts = [
-        {
-            "file": v.file,
-            "line": v.line,
-            "column": v.column,
-            "rule_id": v.rule_id,
-            "severity": v.severity,
-            "phenomenon": v.phenomenon,
-            "attribution": v.attribution,
-            "agente_ref": v.agente_ref,
-        }
-        for v in violations
-    ]
-
-    pw_dicts = [
-        {
-            "rule_id": pw.rule_id,
-            "count": pw.count,
-            "suggestion": pw.suggestion,
-            "description": pw.description,
-        }
-        for pw in (pattern_warnings or [])
-    ]
 
     output = {
         "summary": {
@@ -185,8 +210,8 @@ def format_json(
             "files_checked": files_checked,
             "files_with_violations": files_with_violations,
         },
-        "violations": violation_dicts,
-        "pattern_warnings": pw_dicts,
+        "violations": _build_violation_dicts(violations),
+        "pattern_warnings": _build_pw_dicts(pattern_warnings),
     }
 
     return json.dumps(output, ensure_ascii=False, indent=2)

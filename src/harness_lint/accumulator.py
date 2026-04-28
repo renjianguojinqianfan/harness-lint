@@ -30,6 +30,73 @@ class PatternWarning:
     description: str = ""
 
 
+def _count_violations(violations: list[Violation]) -> dict[str, int]:
+    """Count violations per rule_id."""
+    counts: dict[str, int] = defaultdict(int)
+    for v in violations:
+        counts[v.rule_id] += 1
+    return counts
+
+
+def _collect_first_refs(
+    violations: list[Violation],
+    elevated_rule_ids: set[str],
+) -> dict[str, str]:
+    """Collect first agente_ref per elevated rule."""
+    first_refs: dict[str, str] = {}
+    for v in violations:
+        if v.rule_id in elevated_rule_ids and v.rule_id not in first_refs:
+            first_refs[v.rule_id] = v.agente_ref
+    return first_refs
+
+
+def _build_pattern_warnings(
+    counts: dict[str, int],
+    elevated_rule_ids: set[str],
+    first_refs: dict[str, str],
+    rule_map: dict[str, Rule],
+) -> list[PatternWarning]:
+    """Build pattern warnings for elevated rules."""
+    return [
+        PatternWarning(
+            rule_id=rid,
+            count=counts[rid],
+            suggestion=f"建议在 {first_refs[rid]} 中明确相关规范",
+            description=rule_map[rid].name if rid in rule_map else rid,
+        )
+        for rid in sorted(elevated_rule_ids)
+    ]
+
+
+def _process_violations(
+    violations: list[Violation],
+    elevated_rule_ids: set[str],
+    counts: dict[str, int],
+    phase: str | None,
+) -> list[Violation]:
+    """Update severity/phenomenon for elevated rules."""
+    processed: list[Violation] = []
+    for v in violations:
+        if v.rule_id in elevated_rule_ids:
+            new_severity = "Error" if phase == "evaluate" else v.severity
+            new_phenomenon = f"该冲突已持续出现 {counts[v.rule_id]} 次，尚未解决"
+            processed.append(
+                Violation(
+                    file=v.file,
+                    line=v.line,
+                    column=v.column,
+                    rule_id=v.rule_id,
+                    severity=new_severity,
+                    phenomenon=new_phenomenon,
+                    attribution=v.attribution,
+                    agente_ref=v.agente_ref,
+                )
+            )
+        else:
+            processed.append(v)
+    return processed
+
+
 def apply_accumulation(
     violations: list[Violation],
     phase: str | None,
@@ -57,56 +124,19 @@ def apply_accumulation(
     if not violations:
         return [], []
 
-    # Build rule lookup map
     rule_map: dict[str, Rule] = {}
     if rules:
         for r in rules:
             rule_map[r.rule_id] = r
 
-    # Count per rule_id
-    counts: dict[str, int] = defaultdict(int)
-    for v in violations:
-        counts[v.rule_id] += 1
-
-    # Determine which rule_ids exceed threshold
+    counts = _count_violations(violations)
     elevated_rule_ids = {rid for rid, cnt in counts.items() if cnt >= threshold}
-
-    # Collect first agente_ref per elevated rule for suggestion
-    first_refs: dict[str, str] = {}
-    for v in violations:
-        if v.rule_id in elevated_rule_ids and v.rule_id not in first_refs:
-            first_refs[v.rule_id] = v.agente_ref
-
-    # Build pattern warnings
-    pattern_warnings = [
-        PatternWarning(
-            rule_id=rid,
-            count=counts[rid],
-            suggestion=f"建议在 {first_refs[rid]} 中明确相关规范",
-            description=rule_map[rid].name if rid in rule_map else rid,
-        )
-        for rid in sorted(elevated_rule_ids)
-    ]
-
-    # Process violations: update severity/phenomenon for elevated rules
-    processed: list[Violation] = []
-    for v in violations:
-        if v.rule_id in elevated_rule_ids:
-            new_severity = "Error" if phase == "evaluate" else v.severity
-            new_phenomenon = f"该冲突已持续出现 {counts[v.rule_id]} 次，尚未解决"
-            processed.append(
-                Violation(
-                    file=v.file,
-                    line=v.line,
-                    column=v.column,
-                    rule_id=v.rule_id,
-                    severity=new_severity,
-                    phenomenon=new_phenomenon,
-                    attribution=v.attribution,
-                    agente_ref=v.agente_ref,
-                )
-            )
-        else:
-            processed.append(v)
+    first_refs = _collect_first_refs(violations, elevated_rule_ids)
+    pattern_warnings = _build_pattern_warnings(
+        counts, elevated_rule_ids, first_refs, rule_map
+    )
+    processed = _process_violations(
+        violations, elevated_rule_ids, counts, phase
+    )
 
     return processed, pattern_warnings

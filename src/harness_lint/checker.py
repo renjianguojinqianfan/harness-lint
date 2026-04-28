@@ -25,13 +25,22 @@ _DEFAULT_IGNORE_DIRS = {
 class Context:
     """Simplified context object for phase-aware rule activation."""
 
-    def __init__(self, phase: str | None = None) -> None:
+    def __init__(
+        self,
+        phase: str | None = None,
+        harness_version: str | None = None,
+        hint: str = "",
+    ) -> None:
         """Initialize context with optional phase.
 
         Args:
-            phase: The current PBH phase ("execute", "evaluate", or None).
+            phase: The current PBH phase ("plan", "execute", "evaluate", "done", or None).
+            harness_version: The harness version from progress.json, if present.
+            hint: Human-readable hint based on the current phase.
         """
         self.phase = phase
+        self.harness_version = harness_version
+        self.hint = hint
 
 
 def collect_files(path: str) -> list[str]:

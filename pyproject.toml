@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "harness-lint"
 version = "0.1.0"
-description = "A Harness Engineering project"
+description = "PBH生态的第一个果实工具 — AI生成代码缺陷静态检查器"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
-    {name = "harness-init", email = "harness-init@example.com"},
+    {name = "renjianguojinqianfan", email = "18108097611@163.com"},
 ]
 dependencies = [
     "typer>=0.9.0",
@@ -23,7 +23,7 @@ dev = [
 ]
 
 [project.scripts]
-"harness_lint" = "harness_lint.cli:cli"
+"harness-lint" = "harness_lint.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]

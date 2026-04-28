@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from harness_lint.accumulator import PatternWarning
 from harness_lint.checker import check, collect_files
 from harness_lint.degradation import format_degradation_notice, is_harness_lint_enabled
 from harness_lint.pbh_adapter import get_context
@@ -50,6 +51,48 @@ def main(
     """Harness-Lint CLI."""
 
 
+def _handle_degradation() -> None:
+    """Check if harness-lint is enabled and exit early if not."""
+    if is_harness_lint_enabled():
+        return
+    notice = format_degradation_notice()
+    if notice:
+        typer.echo(notice)
+    else:
+        typer.echo("当前未启用 Harness-Lint")
+    raise typer.Exit(code=0)
+
+
+def _format_output(
+    violations: list[Violation],
+    files_checked: int,
+    pattern_warnings: list[PatternWarning],
+    fmt: str,
+    phase: str | None,
+) -> str:
+    """Format violations according to the requested output format."""
+    if fmt == "json":
+        return format_json(
+            violations, files_checked, pattern_warnings, phase=phase
+        )
+    if fmt == "summary":
+        return format_summary(
+            violations, files_checked, pattern_warnings, phase=phase
+        )
+    return format_terminal(
+        violations, files_checked, pattern_warnings, phase=phase
+    )
+
+
+def _determine_exit_code(violations: list[Violation], strict: bool) -> int:
+    """Return the exit code based on violations and strict mode."""
+    if _has_errors(violations):
+        return 1
+    if strict and _has_warnings(violations):
+        return 1
+    return 0
+
+
 @app.command()
 def run(
     path: str = typer.Argument(".", help="Target directory to lint."),
@@ -65,47 +108,21 @@ def run(
     ),
 ) -> None:
     """Run Harness-Lint against the given path."""
-    # Degradation check
-    if not is_harness_lint_enabled():
-        notice = format_degradation_notice()
-        if notice:
-            typer.echo(notice)
-        else:
-            typer.echo("当前未启用 Harness-Lint")
-        raise typer.Exit(code=0)
+    _handle_degradation()
 
-    # Build context and rules
     context = get_context(path)
     rules = _get_default_rules()
-
-    # Collect files and run checker
     files = collect_files(path)
     files_checked = len(files)
 
     violations, pattern_warnings = check(path, context, rules)
 
-    # Format output
-    if fmt == "json":
-        output = format_json(
-            violations, files_checked, pattern_warnings, phase=context.phase
-        )
-    elif fmt == "summary":
-        output = format_summary(
-            violations, files_checked, pattern_warnings, phase=context.phase
-        )
-    else:
-        output = format_terminal(
-            violations, files_checked, pattern_warnings, phase=context.phase
-        )
-
+    output = _format_output(
+        violations, files_checked, pattern_warnings, fmt, context.phase
+    )
     typer.echo(output)
 
-    # Exit code
-    if _has_errors(violations):
-        raise typer.Exit(code=1)
-    if strict and _has_warnings(violations):
-        raise typer.Exit(code=1)
-    raise typer.Exit(code=0)
+    raise typer.Exit(code=_determine_exit_code(violations, strict))
 
 
 def cli() -> None:
