@@ -115,7 +115,7 @@ def test_help_contains_parameters() -> None:
     """Help text should mention path, --format, and --strict."""
     result = runner.invoke(app, ["run", "--help"])
     assert result.exit_code == 0
-    assert "--format" in result.output
+    assert "Output format" in result.output
     assert "--strict" in result.output
     assert "PATH" in result.output or "path" in result.output
 
