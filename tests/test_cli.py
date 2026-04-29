@@ -116,9 +116,8 @@ def test_help_contains_parameters() -> None:
     result = runner.invoke(app, ["run", "--help"])
     assert result.exit_code == 0
     assert "Output format" in result.output
-    assert "--strict" in result.output
+    assert "Treat warnings" in result.output
     assert "PATH" in result.output or "path" in result.output
-
 
 def test_version_flag() -> None:
     """--version should print version and exit."""
