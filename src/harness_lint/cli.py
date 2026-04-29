@@ -72,16 +72,10 @@ def _format_output(
 ) -> str:
     """Format violations according to the requested output format."""
     if fmt == "json":
-        return format_json(
-            violations, files_checked, pattern_warnings, phase=phase
-        )
+        return format_json(violations, files_checked, pattern_warnings, phase=phase)
     if fmt == "summary":
-        return format_summary(
-            violations, files_checked, pattern_warnings, phase=phase
-        )
-    return format_terminal(
-        violations, files_checked, pattern_warnings, phase=phase
-    )
+        return format_summary(violations, files_checked, pattern_warnings, phase=phase)
+    return format_terminal(violations, files_checked, pattern_warnings, phase=phase)
 
 
 def _determine_exit_code(violations: list[Violation], strict: bool) -> int:
@@ -117,9 +111,7 @@ def run(
 
     violations, pattern_warnings = check(path, context, rules)
 
-    output = _format_output(
-        violations, files_checked, pattern_warnings, fmt, context.phase
-    )
+    output = _format_output(violations, files_checked, pattern_warnings, fmt, context.phase)
     typer.echo(output)
 
     raise typer.Exit(code=_determine_exit_code(violations, strict))

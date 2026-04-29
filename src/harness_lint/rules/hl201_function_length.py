@@ -26,9 +26,7 @@ class HL201FunctionLengthRule(Rule):
         )
         self.threshold = threshold
 
-    def check(
-        self, file_path: str, file_content: str, ast_tree: ast.AST
-    ) -> list[Violation] | None:
+    def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Check a file for functions exceeding the length threshold.
 
         Args:

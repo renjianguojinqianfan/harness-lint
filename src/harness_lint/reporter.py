@@ -49,10 +49,7 @@ def _format_empty_terminal(
     phase: str | None,
 ) -> str:
     """Format terminal output when no violations are found."""
-    base = (
-        f"\x1b[32m✅ 无违规发现{_RESET}\n"
-        f"  检查文件数: {files_checked}"
-    )
+    base = f"\x1b[32m✅ 无违规发现{_RESET}\n  检查文件数: {files_checked}"
     if pattern_warnings:
         lines = [base, "", "⚠️ 模式性偏差："]
         for pw in pattern_warnings:
@@ -86,8 +83,7 @@ def _format_violations_terminal(
             color = _SEVERITY_COLOR.get(v.severity, _RESET)
             icon = _SEVERITY_ICON.get(v.severity, "•")
             lines.append(
-                f"  {v.line}:{v.column}   {color}{icon}{_RESET}  "
-                f"{v.rule_id} {v.phenomenon}"
+                f"  {v.line}:{v.column}   {color}{icon}{_RESET}  {v.rule_id} {v.phenomenon}"
             )
             lines.append(f"         ↳ 原因：{v.attribution}")
             lines.append(f"         ↳ 归属：{v.agente_ref}")
@@ -141,9 +137,7 @@ def format_terminal(
     """
     if not violations:
         return _format_empty_terminal(files_checked, pattern_warnings, phase)
-    return _format_violations_terminal(
-        violations, files_checked, pattern_warnings, phase
-    )
+    return _format_violations_terminal(violations, files_checked, pattern_warnings, phase)
 
 
 def _build_violation_dicts(violations: list[Violation]) -> list[dict]:

@@ -168,9 +168,7 @@ class TestMultipleRules:
 
     def test_two_rules_over_threshold(self) -> None:
         """Both HL201 and HL202 exceed threshold → two PatternWarnings."""
-        violations = [
-            _make_violation(rule_id="HL201", agente_ref="AGENTS.md §5") for _ in range(3)
-        ]
+        violations = [_make_violation(rule_id="HL201", agente_ref="AGENTS.md §5") for _ in range(3)]
         violations += [
             _make_violation(rule_id="HL202", agente_ref="AGENTS.md §4") for _ in range(4)
         ]
@@ -207,10 +205,7 @@ class TestPatternWarningSuggestion:
 
     def test_suggestion_uses_first_violation_agente_ref(self) -> None:
         """Suggestion should cite the first violation's agente_ref."""
-        violations = [
-            _make_violation(agente_ref="AGENTS.md §5 Critical Rules")
-            for _ in range(3)
-        ]
+        violations = [_make_violation(agente_ref="AGENTS.md §5 Critical Rules") for _ in range(3)]
         rules = [_make_rule(agente_ref="AGENTS.md §5 Critical Rules")]
         _, result_pw = apply_accumulation(violations, phase=None, rules=rules)
 
@@ -219,9 +214,7 @@ class TestPatternWarningSuggestion:
 
     def test_suggestion_per_rule(self) -> None:
         """Each rule uses its own agente_ref for suggestion."""
-        violations = [
-            _make_violation(rule_id="HL201", agente_ref="AGENTS.md §5") for _ in range(3)
-        ]
+        violations = [_make_violation(rule_id="HL201", agente_ref="AGENTS.md §5") for _ in range(3)]
         violations += [
             _make_violation(rule_id="HL202", agente_ref="AGENTS.md §4") for _ in range(3)
         ]
@@ -244,9 +237,7 @@ class TestCustomThreshold:
         """threshold=2 → 2 violations triggers escalation."""
         violations = [_make_violation(), _make_violation()]
         rules = [_make_rule()]
-        result_v, result_pw = apply_accumulation(
-            violations, phase=None, rules=rules, threshold=2
-        )
+        result_v, result_pw = apply_accumulation(violations, phase=None, rules=rules, threshold=2)
 
         assert len(result_pw) == 1
         assert all(v.phenomenon == "该冲突已持续出现 2 次，尚未解决" for v in result_v)
@@ -255,9 +246,7 @@ class TestCustomThreshold:
         """threshold=5 → 4 violations does not trigger."""
         violations = [_make_violation() for _ in range(4)]
         rules = [_make_rule()]
-        result_v, result_pw = apply_accumulation(
-            violations, phase=None, rules=rules, threshold=5
-        )
+        result_v, result_pw = apply_accumulation(violations, phase=None, rules=rules, threshold=5)
 
         assert result_pw == []
         assert all(v.phenomenon == "original phenomenon" for v in result_v)
@@ -318,12 +307,8 @@ class TestPatternWarningDescription:
 
     def test_description_for_multiple_rules(self) -> None:
         """Each PatternWarning gets description from its corresponding rule."""
-        violations = [
-            _make_violation(rule_id="HL201") for _ in range(3)
-        ]
-        violations += [
-            _make_violation(rule_id="HL202") for _ in range(3)
-        ]
+        violations = [_make_violation(rule_id="HL201") for _ in range(3)]
+        violations += [_make_violation(rule_id="HL202") for _ in range(3)]
         rules = [
             _make_rule(rule_id="HL201", name="假异常处理"),
             _make_rule(rule_id="HL202", name="函数过长"),

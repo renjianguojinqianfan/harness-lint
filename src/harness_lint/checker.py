@@ -57,9 +57,7 @@ def collect_files(path: str) -> list[str]:
     root = Path(path)
 
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [
-            d for d in dirnames if d not in _DEFAULT_IGNORE_DIRS
-        ]
+        dirnames[:] = [d for d in dirnames if d not in _DEFAULT_IGNORE_DIRS]
         for filename in filenames:
             if filename.endswith(".py"):
                 result.append(str(Path(dirpath) / filename))

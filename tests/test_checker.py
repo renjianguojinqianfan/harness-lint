@@ -15,9 +15,7 @@ class FakeRule(Rule):
 
     violations_to_return: list[Violation] | None = None
 
-    def check(
-        self, file_path: str, file_content: str, ast_tree: ast.AST
-    ) -> list[Violation] | None:
+    def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Return predefined violations."""
         return self.violations_to_return
 

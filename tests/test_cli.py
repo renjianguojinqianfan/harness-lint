@@ -11,11 +11,10 @@ runner = CliRunner()
 
 # --- Degradation tests ---
 
+
 def test_degradation_disabled_shows_notice(monkeypatch) -> None:
     """When disabled, CLI outputs degradation notice and exits 0."""
-    monkeypatch.setattr(
-        "harness_lint.cli.is_harness_lint_enabled", lambda: False
-    )
+    monkeypatch.setattr("harness_lint.cli.is_harness_lint_enabled", lambda: False)
     monkeypatch.setattr(
         "harness_lint.cli.format_degradation_notice",
         lambda: "test degradation notice",
@@ -27,12 +26,8 @@ def test_degradation_disabled_shows_notice(monkeypatch) -> None:
 
 def test_degradation_disabled_no_notice(monkeypatch) -> None:
     """When disabled and no notice, outputs default message."""
-    monkeypatch.setattr(
-        "harness_lint.cli.is_harness_lint_enabled", lambda: False
-    )
-    monkeypatch.setattr(
-        "harness_lint.cli.format_degradation_notice", lambda: None
-    )
+    monkeypatch.setattr("harness_lint.cli.is_harness_lint_enabled", lambda: False)
+    monkeypatch.setattr("harness_lint.cli.format_degradation_notice", lambda: None)
     result = runner.invoke(app, ["run"])
     assert result.exit_code == 0
     assert "当前未启用 Harness-Lint" in result.output
@@ -40,11 +35,10 @@ def test_degradation_disabled_no_notice(monkeypatch) -> None:
 
 # --- Normal execution tests ---
 
+
 def _enable_lint(monkeypatch) -> None:
     """Helper to monkeypatch harness-lint as enabled."""
-    monkeypatch.setattr(
-        "harness_lint.cli.is_harness_lint_enabled", lambda: True
-    )
+    monkeypatch.setattr("harness_lint.cli.is_harness_lint_enabled", lambda: True)
 
 
 def test_default_path_and_format(monkeypatch, tmp_path) -> None:
@@ -115,6 +109,7 @@ def test_no_violations_exits_zero(monkeypatch, tmp_path) -> None:
 
 
 # --- Help and version tests ---
+
 
 def test_help_contains_parameters() -> None:
     """Help text should mention path, --format, and --strict."""

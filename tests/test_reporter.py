@@ -234,16 +234,34 @@ class TestFormatSummary:
         """Summary should correctly count multiple violations per severity."""
         violations = [
             Violation(
-                file="a.py", line=1, column=0, rule_id="HL001",
-                severity="Error", phenomenon="e1", attribution="a1", agente_ref="r1",
+                file="a.py",
+                line=1,
+                column=0,
+                rule_id="HL001",
+                severity="Error",
+                phenomenon="e1",
+                attribution="a1",
+                agente_ref="r1",
             ),
             Violation(
-                file="a.py", line=2, column=0, rule_id="HL002",
-                severity="Error", phenomenon="e2", attribution="a2", agente_ref="r2",
+                file="a.py",
+                line=2,
+                column=0,
+                rule_id="HL002",
+                severity="Error",
+                phenomenon="e2",
+                attribution="a2",
+                agente_ref="r2",
             ),
             Violation(
-                file="b.py", line=1, column=0, rule_id="HL003",
-                severity="Warning", phenomenon="w1", attribution="a3", agente_ref="r3",
+                file="b.py",
+                line=1,
+                column=0,
+                rule_id="HL003",
+                severity="Warning",
+                phenomenon="w1",
+                attribution="a3",
+                agente_ref="r3",
             ),
         ]
         result = format_summary(violations, files_checked=4)

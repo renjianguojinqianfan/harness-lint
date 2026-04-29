@@ -46,17 +46,11 @@ class Rule(ABC):
     def __post_init__(self) -> None:
         """Validate attribution fields after instantiation."""
         if not self.agente_ref:
-            raise ValueError(
-                f"{self.__class__.__name__}: agente_ref must not be empty"
-            )
+            raise ValueError(f"{self.__class__.__name__}: agente_ref must not be empty")
         if not self.attribution:
-            raise ValueError(
-                f"{self.__class__.__name__}: attribution must not be empty"
-            )
+            raise ValueError(f"{self.__class__.__name__}: attribution must not be empty")
 
-    def _create_violation(
-        self, file: str, line: int, column: int, phenomenon: str
-    ) -> Violation:
+    def _create_violation(self, file: str, line: int, column: int, phenomenon: str) -> Violation:
         """Create a Violation with rule metadata pre-filled.
 
         Args:
@@ -81,9 +75,7 @@ class Rule(ABC):
         )
 
     @abstractmethod
-    def check(
-        self, file_path: str, file_content: str, ast_tree: ast.AST
-    ) -> list[Violation] | None:
+    def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Check a file for violations of this rule.
 
         Args:

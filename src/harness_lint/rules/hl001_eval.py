@@ -25,9 +25,7 @@ class HL001EvalRule(Rule):
             attribution="AI 可能用 eval 实现灵活执行，导致代码注入",
         )
 
-    def check(
-        self, file_path: str, file_content: str, ast_tree: ast.AST
-    ) -> list[Violation] | None:
+    def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Check a file for direct eval() calls.
 
         Args:
@@ -39,10 +37,9 @@ class HL001EvalRule(Rule):
             A list of :class:`Violation` objects for each direct eval()
             call found, or ``None`` if no violations are detected.
         """
+
         def _is_eval_call(func: ast.expr) -> bool:
-            return (
-                isinstance(func, ast.Name) and func.id == "eval"
-            ) or (
+            return (isinstance(func, ast.Name) and func.id == "eval") or (
                 isinstance(func, ast.Attribute)
                 and func.attr == "eval"
                 and isinstance(func.value, ast.Name)

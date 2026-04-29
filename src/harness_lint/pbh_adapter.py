@@ -54,10 +54,7 @@ def get_context(path: str = ".") -> Context:
     hint = _HINTS.get(phase, "无 PBH 上下文，启用最严格检查模式")
 
     if harness_version and harness_version != _CURRENT_VERSION:
-        hint += (
-            f" [警告：harness_version {harness_version} "
-            f"与当前版本 {_CURRENT_VERSION} 不兼容]"
-        )
+        hint += f" [警告：harness_version {harness_version} 与当前版本 {_CURRENT_VERSION} 不兼容]"
 
     return Context(
         phase=phase,

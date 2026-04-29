@@ -132,11 +132,7 @@ def apply_accumulation(
     counts = _count_violations(violations)
     elevated_rule_ids = {rid for rid, cnt in counts.items() if cnt >= threshold}
     first_refs = _collect_first_refs(violations, elevated_rule_ids)
-    pattern_warnings = _build_pattern_warnings(
-        counts, elevated_rule_ids, first_refs, rule_map
-    )
-    processed = _process_violations(
-        violations, elevated_rule_ids, counts, phase
-    )
+    pattern_warnings = _build_pattern_warnings(counts, elevated_rule_ids, first_refs, rule_map)
+    processed = _process_violations(violations, elevated_rule_ids, counts, phase)
 
     return processed, pattern_warnings

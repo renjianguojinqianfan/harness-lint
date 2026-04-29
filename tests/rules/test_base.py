@@ -104,7 +104,10 @@ def test_rule_post_init_rejects_empty_agente_ref() -> None:
 
     class BadRule(Rule):
         def check(
-            self, file_path: str, file_content: str, ast_tree: ast.AST,
+            self,
+            file_path: str,
+            file_content: str,
+            ast_tree: ast.AST,
         ) -> list[Violation] | None:  # noqa: ARG002
             return None
 
@@ -124,7 +127,10 @@ def test_rule_post_init_rejects_empty_attribution() -> None:
 
     class BadRule(Rule):
         def check(
-            self, file_path: str, file_content: str, ast_tree: ast.AST,
+            self,
+            file_path: str,
+            file_content: str,
+            ast_tree: ast.AST,
         ) -> list[Violation] | None:  # noqa: ARG002
             return None
 
@@ -144,7 +150,10 @@ def test_rule_post_init_accepts_valid_attribution() -> None:
 
     class GoodRule(Rule):
         def check(
-            self, file_path: str, file_content: str, ast_tree: ast.AST,
+            self,
+            file_path: str,
+            file_content: str,
+            ast_tree: ast.AST,
         ) -> list[Violation] | None:  # noqa: ARG002
             return None
 
