@@ -8,12 +8,28 @@ verifying that:
 
 from harness_lint.checker import check
 from harness_lint.pbh_adapter import get_context
-from harness_lint.rules import HL001EvalRule, HL201FunctionLengthRule
+from harness_lint.rules import (
+    HL001EvalRule,
+    HL002ExecRule,
+    HL003OsSystemRule,
+    HL004HardcodedSecretsRule,
+    HL201FunctionLengthRule,
+    HL202FakeExceptionRule,
+    HL301NoDocstringRule,
+)
 
 
 def test_self_check_passes() -> None:
     """harness-lint should find no violations in its own code."""
-    rules = [HL001EvalRule(), HL201FunctionLengthRule()]
+    rules = [
+        HL001EvalRule(),
+        HL002ExecRule(),
+        HL003OsSystemRule(),
+        HL004HardcodedSecretsRule(),
+        HL201FunctionLengthRule(),
+        HL202FakeExceptionRule(),
+        HL301NoDocstringRule(),
+    ]
     context = get_context(".")
     violations, pattern_warnings = check(".", context, rules)
 
@@ -26,7 +42,15 @@ def test_attribution_chain_completeness() -> None:
 
     We verify this by checking the rules' metadata directly.
     """
-    rules = [HL001EvalRule(), HL201FunctionLengthRule()]
+    rules = [
+        HL001EvalRule(),
+        HL002ExecRule(),
+        HL003OsSystemRule(),
+        HL004HardcodedSecretsRule(),
+        HL201FunctionLengthRule(),
+        HL202FakeExceptionRule(),
+        HL301NoDocstringRule(),
+    ]
 
     for rule in rules:
         assert rule.agente_ref, f"{rule.rule_id} missing agente_ref"

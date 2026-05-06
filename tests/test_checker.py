@@ -322,6 +322,7 @@ class TestCheckFunction:
             def check(
                 self, file_path: str, file_content: str, ast_tree: ast.AST
             ) -> list[Violation] | None:
+                """Record arguments and return None."""
                 self.calls.append((file_path, file_content, ast_tree))
                 return None
 
@@ -352,6 +353,7 @@ class TestCheckFunction:
             def check(
                 self, file_path: str, file_content: str, ast_tree: ast.AST
             ) -> list[Violation] | None:
+                """Return a violation with file_path as phenomenon."""
                 return [
                     Violation(
                         file=file_path,
@@ -477,6 +479,7 @@ class TestCheckFunction:
             def check(
                 self, file_path: str, file_content: str, ast_tree: ast.AST
             ) -> list[Violation] | None:
+                """Increment call count and return None."""
                 self.call_count += 1
                 return None
 

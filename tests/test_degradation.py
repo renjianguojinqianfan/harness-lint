@@ -46,6 +46,7 @@ def _make_rule(
 
     class _TestRule(Rule):
         def check(self, file_path, file_content, ast_tree):
+            """No-op check for testing."""
             return []
 
     return _TestRule(

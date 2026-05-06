@@ -1,1 +1,3 @@
-def hello(): pass
+def hello():
+    """Greet the world."""
+    pass

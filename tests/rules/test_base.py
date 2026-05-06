@@ -22,6 +22,7 @@ class DummyRule(Rule):
         )
 
     def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:  # noqa: ARG002
+        """No-op check for testing."""
         return None
 
 
@@ -109,6 +110,7 @@ def test_rule_post_init_rejects_empty_agente_ref() -> None:
             file_content: str,
             ast_tree: ast.AST,
         ) -> list[Violation] | None:  # noqa: ARG002
+            """No-op check for testing."""
             return None
 
     with pytest.raises(ValueError, match="agente_ref must not be empty"):
@@ -132,6 +134,7 @@ def test_rule_post_init_rejects_empty_attribution() -> None:
             file_content: str,
             ast_tree: ast.AST,
         ) -> list[Violation] | None:  # noqa: ARG002
+            """No-op check for testing."""
             return None
 
     with pytest.raises(ValueError, match="attribution must not be empty"):
@@ -155,6 +158,7 @@ def test_rule_post_init_accepts_valid_attribution() -> None:
             file_content: str,
             ast_tree: ast.AST,
         ) -> list[Violation] | None:  # noqa: ARG002
+            """No-op check for testing."""
             return None
 
     rule = GoodRule(

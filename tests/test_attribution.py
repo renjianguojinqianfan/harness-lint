@@ -26,6 +26,7 @@ class ValidRule(Rule):
         )
 
     def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:  # noqa: ARG002
+        """No-op check for testing."""
         return None
 
 
@@ -33,6 +34,7 @@ class MissingAgenteRefRule(Rule):
     """A rule missing agente_ref for testing."""
 
     def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:  # noqa: ARG002
+        """No-op check for testing."""
         return None
 
 
@@ -40,6 +42,7 @@ class MissingAttributionRule(Rule):
     """A rule missing attribution for testing."""
 
     def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:  # noqa: ARG002
+        """No-op check for testing."""
         return None
 
 
@@ -47,6 +50,7 @@ class InvalidAgenteRefRule(Rule):
     """A rule with invalid agente_ref format for testing."""
 
     def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:  # noqa: ARG002
+        """No-op check for testing."""
         return None
 
 
