@@ -2,9 +2,9 @@
   "project_name": "harness-lint",
   "current_stage": "done",
   "plans": [],
-  "last_updated": "2026-05-06T12:00:00.000000+00:00",
-  "last_action": "实现 HL002-HL004, HL202, HL301 共 5 条基础规则",
-  "rules_implemented": 7,
-  "tests_total": 214,
-  "coverage": "96.47%"
+  "last_updated": "2026-05-22T12:00:00.000000+00:00",
+  "last_action": "实现 HL401 重复违规模式检测、HL402 协议一致性检查，完成全部 9 条规则",
+  "rules_implemented": 9,
+  "tests_total": 245,
+  "coverage": "96.85%"
 }

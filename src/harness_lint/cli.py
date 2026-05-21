@@ -9,7 +9,17 @@ from harness_lint.checker import check, collect_files
 from harness_lint.degradation import format_degradation_notice, is_harness_lint_enabled
 from harness_lint.pbh_adapter import get_context
 from harness_lint.reporter import format_json, format_summary, format_terminal
-from harness_lint.rules import HL001EvalRule, HL201FunctionLengthRule
+from harness_lint.rules import (
+    HL001EvalRule,
+    HL002ExecRule,
+    HL003OsSystemRule,
+    HL004HardcodedSecretsRule,
+    HL201FunctionLengthRule,
+    HL202FakeExceptionRule,
+    HL301NoDocstringRule,
+    HL401RepeatedPatternRule,
+    HL402ProtocolConsistencyRule,
+)
 from harness_lint.rules.base import Rule, Violation
 
 app = typer.Typer()
@@ -17,7 +27,17 @@ app = typer.Typer()
 
 def _get_default_rules() -> list[Rule]:
     """Return the built-in rule instances."""
-    return [HL001EvalRule(), HL201FunctionLengthRule()]
+    return [
+        HL001EvalRule(),
+        HL002ExecRule(),
+        HL003OsSystemRule(),
+        HL004HardcodedSecretsRule(),
+        HL201FunctionLengthRule(),
+        HL202FakeExceptionRule(),
+        HL301NoDocstringRule(),
+        HL401RepeatedPatternRule(),
+        HL402ProtocolConsistencyRule(),
+    ]
 
 
 def _has_errors(violations: list[Violation]) -> bool:

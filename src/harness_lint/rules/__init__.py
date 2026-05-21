@@ -7,6 +7,8 @@ from harness_lint.rules.hl004_hardcoded_secrets import HL004HardcodedSecretsRule
 from harness_lint.rules.hl201_function_length import HL201FunctionLengthRule
 from harness_lint.rules.hl202_fake_exception import HL202FakeExceptionRule
 from harness_lint.rules.hl301_no_docstring import HL301NoDocstringRule
+from harness_lint.rules.hl401_repeated_pattern import HL401RepeatedPatternRule
+from harness_lint.rules.hl402_protocol_consistency import HL402ProtocolConsistencyRule
 
 __all__ = [
     "HL001EvalRule",
@@ -16,4 +18,6 @@ __all__ = [
     "HL201FunctionLengthRule",
     "HL202FakeExceptionRule",
     "HL301NoDocstringRule",
+    "HL401RepeatedPatternRule",
+    "HL402ProtocolConsistencyRule",
 ]
