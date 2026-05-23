@@ -36,6 +36,15 @@ harness-lint/
 
 This project follows the PBH protocol. AI assistants should read `AGENTS.md` for project rules and working guidelines.
 
+## Ecosystem
+
+| Project | Description |
+|---------|-------------|
+| [Project Bootstrap Harness (PBH)](https://github.com/renjianguojinqianfan/Project-Bootstrap-Harness) | AI-assisted project bootstrap framework defining phase-awareness, attribution anchoring, and core protocols |
+| [Harness Agent](https://github.com/renjianguojinqianfan/harness-agent) | AI Agent runtime for the PBH protocol, responsible for plan execution and session lifecycle management |
+
+harness-lint is the quality guardian in the PBH ecosystem, performing static analysis on AI-generated code during agent execution.
+
 ## License
 
 MIT

@@ -35,6 +35,15 @@ harness-lint/
 
 本项目遵循 PBH 协议。AI 助手请阅读 `AGENTS.md` 了解项目规则和工作准则。
 
+## 生态关联
+
+| 项目 | 说明 |
+|------|------|
+| [Project Bootstrap Harness (PBH)](https://github.com/renjianguojinqianfan/Project-Bootstrap-Harness) | AI 辅助项目启动框架，定义了阶段感知、归因锚定等核心协议 |
+| [Harness Agent](https://github.com/renjianguojinqianfan/harness-agent) | PBH 协议的 AI Agent 运行时，负责执行计划、管理会话生命周期 |
+
+harness-lint 是 PBH 生态中的质量守护工具，在 Agent 执行过程中对生成的代码进行静态检查。
+
 ## 许可证
 
 MIT
