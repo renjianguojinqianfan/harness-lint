@@ -104,7 +104,7 @@ def check(
         try:
             with open(file_path, encoding="utf-8") as f:
                 content = f.read()
-        except OSError:
+        except (OSError, UnicodeDecodeError):
             continue
 
         try:
