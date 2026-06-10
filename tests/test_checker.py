@@ -496,6 +496,40 @@ class TestCheckFunction:
         assert counter.call_count == 1  # Only good.py
         assert result == []
 
+    def test_skips_files_with_non_utf8_encoding(self, tmp_path) -> None:
+        """Should skip files with non-UTF-8 encoding without crashing."""
+        bad_file = tmp_path / "latin1.py"
+        bad_file.write_bytes("# -*- coding: latin-1 -*-\nname = 'Ren\xe9'\n".encode("latin-1"))
+        good_file = tmp_path / "good.py"
+        good_file.write_text("x = 1\n")
+
+        class CountingRule(FakeRule):
+            """Counts how many times check is called."""
+
+            def __init__(self, **kwargs) -> None:
+                super().__init__(**kwargs)
+                self.call_count = 0
+
+            def check(
+                self, file_path: str, file_content: str, ast_tree: ast.AST
+            ) -> list[Violation] | None:
+                """Increment call count and return None."""
+                self.call_count += 1
+                return None
+
+        counter = CountingRule(
+            rule_id="HL002",
+            name="counter",
+            severity="Error",
+            message_template="msg",
+            agente_ref="AGENTS.md §1",
+            attribution="attr",
+        )
+        context = Context(phase=None)
+        result, _ = check(str(tmp_path), context, [counter])
+        assert counter.call_count == 1  # Only good.py
+        assert result == []
+
     def test_no_rules_returns_empty_list(self, tmp_path) -> None:
         """Should return empty list when no rules provided."""
         (tmp_path / "a.py").write_text("x = 1\n")
