@@ -49,35 +49,12 @@ class HL004HardcodedSecretsRule(Rule):
             attribution="硬编码密钥存在泄露风险，应使用环境变量或 .env 文件",
         )
 
-    def _is_env_call(self, node: ast.expr) -> bool:
-        """Check if node is an os.environ.get() or os.getenv() call."""
-        if not isinstance(node, ast.Call):
-            return False
-        func = node.func
-        # os.environ.get(...)
-        if (
-            isinstance(func, ast.Attribute)
-            and func.attr == "get"
-            and isinstance(func.value, ast.Attribute)
-            and func.value.attr == "environ"
-            and isinstance(func.value.value, ast.Name)
-            and func.value.value.id == "os"
-        ):
-            return True
-        # os.getenv(...)
-        return (
-            isinstance(func, ast.Attribute)
-            and func.attr == "getenv"
-            and isinstance(func.value, ast.Name)
-            and func.value.id == "os"
-        )
-
     def _check_assign(self, node: ast.Assign, file_path: str) -> list[Violation]:
         """Check an ast.Assign node for hardcoded secrets."""
-        violations = []
+        violations: list[Violation] = []
+        # Only string literal values are subject to detection; non-Constant
+        # values (including os.environ.get / os.getenv calls) are skipped.
         if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
-            if self._is_env_call(node.value):
-                return violations
             return violations
         value = node.value.value
         if value in _PLACEHOLDER_VALUES:
@@ -96,12 +73,12 @@ class HL004HardcodedSecretsRule(Rule):
 
     def _check_ann_assign(self, node: ast.AnnAssign, file_path: str) -> list[Violation]:
         """Check an ast.AnnAssign node for hardcoded secrets."""
-        violations = []
+        violations: list[Violation] = []
         if node.value is None:
             return violations
+        # Only string literal values are subject to detection; non-Constant
+        # values (including os.environ.get / os.getenv calls) are skipped.
         if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
-            if self._is_env_call(node.value):
-                return violations
             return violations
         value = node.value.value
         if value in _PLACEHOLDER_VALUES:
