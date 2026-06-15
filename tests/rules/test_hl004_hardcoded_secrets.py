@@ -149,3 +149,72 @@ api_key = "key123"
         result = rule.check("test.py", code, tree)
 
         assert result is None or result == []
+
+    def test_annotated_password_detected(self) -> None:
+        """password: str = 'secret123' (AnnAssign) should be detected."""
+        code = 'password: str = "secret123"\n'
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is not None
+        assert len(result) == 1
+        v = result[0]
+        assert v.rule_id == "HL004"
+        assert "password" in v.phenomenon
+
+    def test_annotated_api_key_detected(self) -> None:
+        """api_key: str = 'sk-12345' (AnnAssign) should be detected."""
+        code = 'api_key: str = "sk-12345"\n'
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is not None
+        assert len(result) == 1
+        assert "api_key" in result[0].phenomenon
+
+    def test_annotated_empty_not_detected(self) -> None:
+        """password: str = '' (AnnAssign) should NOT be detected."""
+        code = 'password: str = ""\n'
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is None or result == []
+
+    def test_annotated_placeholder_not_detected(self) -> None:
+        """password: str = 'changeme' (AnnAssign) should NOT be detected."""
+        code = 'password: str = "changeme"\n'
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is None or result == []
+
+    def test_annotated_environ_get_not_detected(self) -> None:
+        """password: str = os.environ.get('PW') (AnnAssign) should NOT be detected."""
+        code = 'password: str = os.environ.get("PW")\n'
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is None or result == []
+
+    def test_annotation_without_value_not_detected(self) -> None:
+        """password: str (AnnAssign without value) should NOT be detected."""
+        code = "password: str\n"
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is None or result == []
+
+    def test_annotated_non_string_not_detected(self) -> None:
+        """password: int = 123 (AnnAssign with non-string value) should NOT be detected."""
+        code = "password: int = 123\n"
+        tree = ast.parse(code)
+        rule = HL004HardcodedSecretsRule()
+        result = rule.check("test.py", code, tree)
+
+        assert result is None or result == []
