@@ -53,7 +53,7 @@ def _has_warnings(violations: list[Violation]) -> bool:
 def version_callback(value: bool) -> None:
     """Print version and exit."""
     if value:
-        typer.echo("harness-lint 0.1.0")
+        typer.echo("harness-lint 0.2.0")
         raise typer.Exit()
 
 
