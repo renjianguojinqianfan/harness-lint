@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-15
+
 ### Added
 
 - **HL002：禁止 exec()** (`src/harness_lint/rules/hl002_exec.py`) — 安全类规则（Error），AST 检测 `exec(...)` 直接调用
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 单文件内同一反模式出现 3+ 次时报告，覆盖 bare except、`except Exception`、specific-except-with-pass 三类
 - **HL402：协议一致性检查** (`src/harness_lint/rules/hl402_protocol_consistency.py`) — 模式性偏差规则（Warning）
   - 检测公共函数的参数（除 `self`/`cls`）与返回值缺失类型标注，对应 AGENTS.md §4
+- 项目元数据：`LICENSE` (MIT)、`pyproject.toml` 增加 `license`、`classifiers`、`project.urls` 字段
 
 ### Changed
 
@@ -105,5 +108,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Summary 格式中 pattern_warnings 使用换行符拼接，替代管道符 `|` 拼接
 - 退化提示中 AGENTS.md 条款列表增加防御性去重
 
-[Unreleased]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/renjianguojinqianfan/harness-lint/releases/tag/v0.1.0

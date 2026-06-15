@@ -4,16 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "harness-lint"
-version = "0.1.0"
+version = "0.2.0"
 description = "PBH生态的第一个果实工具 — AI生成代码缺陷静态检查器"
 readme = "README.md"
 requires-python = ">=3.11"
+license = {text = "MIT"}
 authors = [
     {name = "renjianguojinqianfan", email = "18108097611@163.com"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
     "typer>=0.9.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/renjianguojinqianfan/harness-lint"
+Repository = "https://github.com/renjianguojinqianfan/harness-lint"
+Issues = "https://github.com/renjianguojinqianfan/harness-lint/issues"
+Changelog = "https://github.com/renjianguojinqianfan/harness-lint/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
