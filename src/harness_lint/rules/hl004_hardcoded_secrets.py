@@ -49,28 +49,50 @@ class HL004HardcodedSecretsRule(Rule):
             attribution="硬编码密钥存在泄露风险，应使用环境变量或 .env 文件",
         )
 
-    def _is_env_call(self, node: ast.expr) -> bool:
-        """Check if node is an os.environ.get() or os.getenv() call."""
-        if not isinstance(node, ast.Call):
-            return False
-        func = node.func
-        # os.environ.get(...)
-        if (
-            isinstance(func, ast.Attribute)
-            and func.attr == "get"
-            and isinstance(func.value, ast.Attribute)
-            and func.value.attr == "environ"
-            and isinstance(func.value.value, ast.Name)
-            and func.value.value.id == "os"
-        ):
-            return True
-        # os.getenv(...)
-        return (
-            isinstance(func, ast.Attribute)
-            and func.attr == "getenv"
-            and isinstance(func.value, ast.Name)
-            and func.value.id == "os"
-        )
+    def _check_assign(self, node: ast.Assign, file_path: str) -> list[Violation]:
+        """Check an ast.Assign node for hardcoded secrets."""
+        violations: list[Violation] = []
+        # Only string literal values are subject to detection; non-Constant
+        # values (including os.environ.get / os.getenv calls) are skipped.
+        if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
+            return violations
+        value = node.value.value
+        if value in _PLACEHOLDER_VALUES:
+            return violations
+        for target in node.targets:
+            if isinstance(target, ast.Name) and _SENSITIVE_PATTERNS.search(target.id):
+                violations.append(
+                    self._create_violation(
+                        file=file_path,
+                        line=node.lineno,
+                        column=node.col_offset,
+                        phenomenon=self.message_template.format(var_name=target.id),
+                    )
+                )
+        return violations
+
+    def _check_ann_assign(self, node: ast.AnnAssign, file_path: str) -> list[Violation]:
+        """Check an ast.AnnAssign node for hardcoded secrets."""
+        violations: list[Violation] = []
+        if node.value is None:
+            return violations
+        # Only string literal values are subject to detection; non-Constant
+        # values (including os.environ.get / os.getenv calls) are skipped.
+        if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
+            return violations
+        value = node.value.value
+        if value in _PLACEHOLDER_VALUES:
+            return violations
+        if isinstance(node.target, ast.Name) and _SENSITIVE_PATTERNS.search(node.target.id):
+            violations.append(
+                self._create_violation(
+                    file=file_path,
+                    line=node.lineno,
+                    column=node.col_offset,
+                    phenomenon=self.message_template.format(var_name=node.target.id),
+                )
+            )
+        return violations
 
     def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Check a file for hardcoded secrets.
@@ -86,26 +108,8 @@ class HL004HardcodedSecretsRule(Rule):
         """
         violations = []
         for node in ast.walk(ast_tree):
-            if not isinstance(node, ast.Assign):
-                continue
-            # Check if value is a string literal
-            if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
-                # Also skip os.environ.get / os.getenv calls
-                if self._is_env_call(node.value):
-                    continue
-                continue
-            value = node.value.value
-            if value in _PLACEHOLDER_VALUES:
-                continue
-            # Check each target
-            for target in node.targets:
-                if isinstance(target, ast.Name) and _SENSITIVE_PATTERNS.search(target.id):
-                    violations.append(
-                        self._create_violation(
-                            file=file_path,
-                            line=node.lineno,
-                            column=node.col_offset,
-                            phenomenon=self.message_template.format(var_name=target.id),
-                        )
-                    )
+            if isinstance(node, ast.Assign):
+                violations.extend(self._check_assign(node, file_path))
+            elif isinstance(node, ast.AnnAssign):
+                violations.extend(self._check_ann_assign(node, file_path))
         return violations if violations else None
