@@ -81,9 +81,7 @@ class HL401RepeatedPatternRule(Rule):
                 positions.append((handler.lineno, handler.col_offset))
         return positions
 
-    def check(
-        self, file_path: str, file_content: str, ast_tree: ast.AST
-    ) -> list[Violation] | None:
+    def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Check a file for repeated anti-pattern occurrences.
 
         Args:

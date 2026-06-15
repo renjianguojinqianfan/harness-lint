@@ -63,9 +63,7 @@ class HL402ProtocolConsistencyRule(Rule):
 
         return missing
 
-    def check(
-        self, file_path: str, file_content: str, ast_tree: ast.AST
-    ) -> list[Violation] | None:
+    def check(self, file_path: str, file_content: str, ast_tree: ast.AST) -> list[Violation] | None:
         """Check a file for public functions missing type annotations.
 
         Args:
@@ -97,9 +95,7 @@ class HL402ProtocolConsistencyRule(Rule):
                     file=file_path,
                     line=node.lineno,
                     column=node.col_offset,
-                    phenomenon=self.message_template.format(
-                        name=node.name, details=details
-                    ),
+                    phenomenon=self.message_template.format(name=node.name, details=details),
                 )
             )
 
