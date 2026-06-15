@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **HL002：禁止 exec()** (`src/harness_lint/rules/hl002_exec.py`) — 安全类规则（Error），AST 检测 `exec(...)` 直接调用
+- **HL003：禁止 os.system()** (`src/harness_lint/rules/hl003_os_system.py`) — 安全类规则（Error），引导改用 `subprocess.run()`
+- **HL004：硬编码密钥检测** (`src/harness_lint/rules/hl004_hardcoded_secrets.py`) — 安全类规则（Error）
+  - 覆盖 `Assign`：`password = "xxx"`、`API_KEY = b"..."` 等裸赋值
+  - 覆盖 `AnnAssign`：`password: str = "xxx"` 等带类型标注的赋值
+  - 通过 `_check_value` 统一字符串与字节串字面量的密钥模式检测
+- **HL202：假异常处理** (`src/harness_lint/rules/hl202_fake_exception.py`) — AI 代码质量类规则（Warning）
+  - 检测 `except: pass`、`except Exception: pass` 等无效异常处理
+- **HL301：公共函数无 docstring** (`src/harness_lint/rules/hl301_no_docstring.py`) — AI 代码质量类规则（Info）
+- **HL401：重复违规模式检测** (`src/harness_lint/rules/hl401_repeated_pattern.py`) — 模式性偏差规则（Warning）
+  - 单文件内同一反模式出现 3+ 次时报告，覆盖 bare except、`except Exception`、specific-except-with-pass 三类
+- **HL402：协议一致性检查** (`src/harness_lint/rules/hl402_protocol_consistency.py`) — 模式性偏差规则（Warning）
+  - 检测公共函数的参数（除 `self`/`cls`）与返回值缺失类型标注，对应 AGENTS.md §4
+
+### Changed
+
+- HL004：删除 `_check_assign` / `_check_ann_assign` 中的 `_is_env_call` 死分支，并移除已无调用点的 `_is_env_call` 方法（遵循 AGENTS.md §4 "no abstractions for single-use cases"）
+- 默认规则集由 2 条扩展到 9 条（`src/harness_lint/cli.py`）
+
+### Fixed
+
+- 修复 `hl401_repeated_pattern.py` 与 `hl402_protocol_consistency.py` 在 `ruff format --check src/` 下不通过的格式问题（折叠多行函数签名与 format 调用为单行），解除 CI lint job 红灯
+
 ## [0.1.0] - 2026-04-28
 
 ### Added
