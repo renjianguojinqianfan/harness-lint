@@ -30,6 +30,7 @@
 - Check `docs/decisions/` and `docs/context.md` when unsure
 - All public APIs need type hints and docstrings
 - Follow existing code style; no abstractions for single-use cases
+- When code changes, sync companion docs (README, CHANGELOG, project map) in the same PR — see `docs/release-checklist.md` for release-time details
 
 ## 5. Critical Rules
 
