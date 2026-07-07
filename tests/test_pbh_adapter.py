@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from harness_lint.checker import Context
 from harness_lint.pbh_adapter import get_context
@@ -148,3 +149,55 @@ class TestGetContextVersion:
         )
         context = get_context(str(tmp_path))
         assert context.harness_version == "0.5.0"
+
+
+def _write_progress(tmp_path, **kwargs) -> None:
+    """Write progress.json with the given fields."""
+    harness_dir = tmp_path / ".harness"
+    harness_dir.mkdir()
+    progress_file = harness_dir / "progress.json"
+    progress_file.write_text(json.dumps(kwargs), encoding="utf-8")
+
+
+class TestCurrentStageFallback:
+    """Tests for current_stage fallback when phase is absent."""
+
+    def test_current_stage_fallback(self, tmp_path) -> None:
+        """phase 缺失、current_stage 有效 → 使用 current_stage 作为 phase."""
+        _write_progress(tmp_path, current_stage="execute")
+        context = get_context(str(tmp_path))
+        assert context.phase == "execute"
+        assert context.hint == "当前为执行阶段，安全类规则已激活"
+
+    def test_current_stage_done(self, tmp_path) -> None:
+        """current_stage='done' → phase='done'."""
+        _write_progress(tmp_path, current_stage="done")
+        context = get_context(str(tmp_path))
+        assert context.phase == "done"
+        assert context.hint == "当前为完成阶段，所有检查项应已通过"
+
+    def test_phase_precedence_over_current_stage(self, tmp_path) -> None:
+        """phase 与 current_stage 并存 → phase 胜出."""
+        _write_progress(tmp_path, phase="plan", current_stage="execute")
+        context = get_context(str(tmp_path))
+        assert context.phase == "plan"
+        assert context.hint == "当前为规划阶段，建议先完善 AGENTS.md 规则定义"
+
+    def test_current_stage_fallback_logs_warning(self, tmp_path, caplog) -> None:
+        """回退至 current_stage 时记录兼容提示日志."""
+        _write_progress(tmp_path, current_stage="execute")
+        with caplog.at_level(logging.WARNING, logger="harness_lint.pbh_adapter"):
+            context = get_context(str(tmp_path))
+        assert context.phase == "execute"
+        assert any(
+            "current_stage" in r.message and "phase" in r.message
+            for r in caplog.records
+        )
+
+    def test_both_absent_logs_warning(self, tmp_path, caplog) -> None:
+        """phase 与 current_stage 皆缺 → 降级并记录警告日志."""
+        _write_progress(tmp_path, harness_version="0.1.0")
+        with caplog.at_level(logging.WARNING, logger="harness_lint.pbh_adapter"):
+            context = get_context(str(tmp_path))
+        assert context.phase is None
+        assert any("降级为默认检查模式" in r.message for r in caplog.records)

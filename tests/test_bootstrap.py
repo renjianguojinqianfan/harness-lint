@@ -6,8 +6,7 @@ verifying that:
 2. All rule outputs contain the full attribution chain
 """
 
-from harness_lint.checker import check
-from harness_lint.pbh_adapter import get_context
+from harness_lint.checker import Context, check
 from harness_lint.rules import (
     HL001EvalRule,
     HL002ExecRule,
@@ -20,7 +19,12 @@ from harness_lint.rules import (
 
 
 def test_self_check_passes() -> None:
-    """harness-lint should find no violations in its own code."""
+    """harness-lint should find no violations in its own code.
+
+    The self-check uses phase=None so that all rules are always active,
+    decoupling it from the project's current PBH stage (which may be
+    "done" and would otherwise deactivate all rules).
+    """
     rules = [
         HL001EvalRule(),
         HL002ExecRule(),
@@ -30,7 +34,7 @@ def test_self_check_passes() -> None:
         HL202FakeExceptionRule(),
         HL301NoDocstringRule(),
     ]
-    context = get_context(".")
+    context = Context(phase=None)
     violations, pattern_warnings = check(".", context, rules)
 
     assert len(violations) == 0, f"Self-check found violations: {violations}"
