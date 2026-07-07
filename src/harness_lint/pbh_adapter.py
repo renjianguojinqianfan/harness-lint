@@ -45,9 +45,7 @@ def _resolve_phase(data: dict) -> str | None:
             )
     if phase not in _VALID_PHASES:
         if phase is None:
-            logger.warning(
-                "progress.json 缺少 phase 与 current_stage 字段，降级为默认检查模式"
-            )
+            logger.warning("progress.json 缺少 phase 与 current_stage 字段，降级为默认检查模式")
         else:
             logger.warning("阶段值 '%s' 无效，降级为默认检查模式", phase)
         return None
