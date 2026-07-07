@@ -1,10 +1,10 @@
 ---
 project: harness-lint
 package: harness_lint
-version: "0.1.0"
+version: "0.2.0"
 map_type: static
 audience: agent
-last_updated: "2026-06-15"
+last_updated: "2026-07-07"
 ---
 
 # PROJECT_MAP — harness-lint
@@ -41,6 +41,7 @@ harness-lint/
 │       └── ADR_TEMPLATE.md
 ├── src/harness_lint/            # Main application source
 │   ├── __init__.py              # Package marker
+│   ├── __main__.py              # `python -m harness_lint` entry; delegates to app()
 │   ├── cli.py                   # CLI entry (typer); orchestrates checker + reporter
 │   ├── checker.py               # File walker + rule dispatcher
 │   ├── reporter.py              # terminal / json / summary output formatters
@@ -99,13 +100,14 @@ harness-lint/
 
 | File | Purpose | Agent Notes |
 |------|---------|-------------|
-| `src/harness_lint/cli.py` | CLI parsing, rule registration, output dispatch | Keep thin; new logic goes elsewhere |
+| `src/harness_lint/cli.py` | CLI parsing, rule registration, output dispatch; calls `record_run_state` after check | Keep thin; new logic goes elsewhere |
+| `src/harness_lint/__main__.py` | `python -m harness_lint` entry; delegates to `app()` | Thin shim; no logic |
 | `src/harness_lint/checker.py` | Recursive `.py` walk + per-file AST dispatch to active rules | Phase-awareness gates rule activation |
 | `src/harness_lint/reporter.py` | Three output formats: terminal/json/summary | Add new format = new function with same signature |
 | `src/harness_lint/accumulator.py` | Counts violations by `rule_id`; emits `PatternWarning` once threshold hit | Threshold default 3; configurable |
 | `src/harness_lint/attribution.py` | `validate_rule_attribution`, `validate_violation`, `validate_ruleset` | Runtime safety net for the attribution chain |
-| `src/harness_lint/pbh_adapter.py` | Loads phase from `.harness/progress.json`; returns `Context(phase, hint)` | Missing/malformed file → `Context(phase=None)` (non-fatal) |
-| `src/harness_lint/degradation.py` | Renders the "Harness-Lint not enabled" notice with cost data | Triggers when CLI cannot detect itself in the project |
+| `src/harness_lint/pbh_adapter.py` | Loads phase from `.harness/progress.json` (`phase` → `current_stage` fallback); returns `Context(phase, hint)` | Missing/malformed file → `Context(phase=None)` (non-fatal); logs warning on fallback |
+| `src/harness_lint/degradation.py` | `record_run_state` persists run state; `format_degradation_notice` renders cost-of-disabling notice | Called by `cli.run()` after every check; no longer gates execution |
 | `src/harness_lint/rules/base.py` | `Rule` ABC + `Violation` frozen dataclass | All rules subclass `Rule`; `_create_violation()` auto-fills metadata |
 
 ### 3.2 Rules
@@ -129,7 +131,7 @@ All 9 rules live in `src/harness_lint/rules/` and are registered in `_get_defaul
 | File | Purpose | Agent Notes |
 |------|---------|-------------|
 | `pyproject.toml` | Dependencies, build config, ruff settings | Add new deps in `[project.dependencies]` |
-| `Makefile` | `make verify`, `make test`, `make lint`, `make fix` | Always run `make verify` before commit |
+| `Makefile` | `make verify`, `make test`, `make lint`, `make format-check` | Always run `make verify` before commit |
 
 ### 3.4 Documentation
 
@@ -138,6 +140,7 @@ All 9 rules live in `src/harness_lint/rules/` and are registered in `_get_defaul
 | `AGENTS.md` | Quick agent map and rules | Read first on every new session |
 | `docs/context.md` | Deep architecture and conventions | Read before architectural decisions |
 | `docs/design.md` | Frozen v0.1.0 design contract (Chinese) | Source of truth for rule design intent |
+| `docs/LINT-REPORT-SCHEMA-v1.md` | `--format=json` output schema spec | Defines JSON report contract |
 | `docs/decisions/` | ADR records | One file per major decision |
 | `docs/PROJECT_MAP.md` | This file — structure reference | Use for file location lookups |
 | `CHANGELOG.md` | Release notes (Keep a Changelog) | Update `[Unreleased]` on every user-visible change |
@@ -164,7 +167,7 @@ Install all: `pip install -e ".[dev]"`
 |-------------|------|-------------|
 | CLI command `harness-lint` | `src/harness_lint/cli.py:cli` | Main user-facing interface |
 | Python module | `python -m harness_lint` | Programmatic entry |
-| Verification | `make verify` | Run lint + tests + coverage |
+| Verification | `make verify` | Run lint + format check + tests + coverage |
 
 ## 6. Conventions for Agents
 

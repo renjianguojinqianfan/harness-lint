@@ -20,6 +20,7 @@ harness-lint --format json         # 输出 JSON
 harness-lint --format summary      # 输出单行摘要
 harness-lint --strict              # 把 Warning 也视为退出码 1
 harness-lint --version
+python -m harness_lint             # 等价于 harness-lint
 ```
 
 退出码：
@@ -52,16 +53,17 @@ harness-lint --version
 
 | 命令 | 说明 |
 |------|------|
-| `make verify` | lint + 测试 + 覆盖率（提交前必须通过） |
+| `make verify` | lint + 格式检查 + 测试 + 覆盖率（提交前必须通过） |
 | `make test` | 仅运行测试 |
 | `make lint` | 仅运行代码风格检查 |
-| `make fix` | 自动修复风格问题 |
+| `make format-check` | 检查代码格式（ruff format --check） |
 
 ## 项目结构
 
 ```
 harness-lint/
 ├── src/harness_lint/
+│   ├── __main__.py            # python -m harness_lint 入口
 │   ├── cli.py                # CLI 入口（typer）
 │   ├── checker.py            # 文件遍历 + 规则调度
 │   ├── reporter.py           # terminal / json / summary 三种输出

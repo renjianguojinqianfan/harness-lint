@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`python -m harness_lint` 支持** (`src/harness_lint/__main__.py`) — 通过 Typer `app()` 派发，等价于 `harness-lint` 控制台脚本
+- **PBH 阶段字段兼容** (`src/harness_lint/pbh_adapter.py`) — `get_context` 优先读 `phase`，缺失时回退 `current_stage`，皆无则记 warning 日志降级默认模式；抽取 `_resolve_phase` 辅助函数
+- **运行状态持久化** (`src/harness_lint/cli.py`) — `run` 在检查完成后调用 `degradation.record_run_state`，将规则元数据、违规计数与去重 agente_refs 写入 `.harness/harness-lint-state.json`
+- **JSON 报告格式规范** (`docs/LINT-REPORT-SCHEMA-v1.md`) — 定义 `--format=json` 输出契约（顶层字段、Violation 对象、版本策略）
+
+### Changed
+
+- **移除退化短路退出** (`src/harness_lint/cli.py`) — 删除 `_handle_degradation` 中检查 `.harness/harness-lint-enabled` 不存在即 `exit(0)` 的门控；非 PBH 项目不再静默退出，检查始终执行。PBH 感知保留为 `pbh_adapter.get_context` 的自动检测增强特性，不作前置条件；`degradation.py` 模块作为可用能力保留
+- **自检与项目阶段解耦** (`tests/test_bootstrap.py`) — `test_self_check_passes` 改用 `Context(phase=None)` 显式构造，始终跑全部规则，不受项目当前 `current_stage` 影响
+- **`make verify` 增加格式检查** (`Makefile`) — 新增 `format-check` 目标（`ruff format --check src/`），`verify` 现按 `lint → format-check → test` 三阶段执行，本地与 CI 一致
+
 ## [0.2.0] - 2026-06-15
 
 ### Added

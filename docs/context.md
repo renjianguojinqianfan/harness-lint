@@ -4,7 +4,7 @@
 
 ```yaml
 name: harness-lint
-version: 0.1.0
+version: 0.2.0
 type: cli
 tech_stack:
   language: Python 3.11+
@@ -57,13 +57,14 @@ harness-lint is **not** a general-purpose linter. It exists to detect patterns t
 
 ```
 src/harness_lint/
+├── __main__.py        # `python -m harness_lint` entry; delegates to app()
 ├── cli.py             # CLI entry; orchestrates the pipeline
 ├── checker.py         # File walker + AST parsing + rule dispatch
 ├── reporter.py        # Three output formatters (terminal/json/summary)
 ├── accumulator.py     # Cost accumulation: 3+ same violations → PatternWarning
 ├── attribution.py     # Runtime validation of attribution chain integrity
-├── pbh_adapter.py     # Loads phase context from .harness/progress.json
-├── degradation.py     # Renders degradation notice when not enabled
+├── pbh_adapter.py     # Loads phase context (phase → current_stage fallback)
+├── degradation.py     # Persists run state; renders degradation notice
 └── rules/
     ├── base.py        # Rule (ABC) + Violation (frozen dataclass)
     └── hl*.py         # 9 rule implementations
@@ -89,7 +90,9 @@ Three layers of enforcement guarantee no rule slips without attribution:
 
 `pbh_adapter.get_context(path)` reads `.harness/progress.json` and returns a `Context(phase, hint)`. Each rule declares which phases it activates in (`plan` / `execute` / `evaluate` / `None`). The checker only invokes a rule when the current phase intersects the rule's `phases`.
 
-If `progress.json` is missing or malformed, `Context(phase=None)` is returned — checks proceed but phase-specific behaviour (such as Elevated Warning → Error escalation) is skipped.
+Phase resolution (in `_resolve_phase`): the `phase` field is read first; if absent, falls back to `current_stage`. If both are missing or invalid, a warning is logged and `phase=None` is returned. If `progress.json` itself is missing or malformed, `Context(phase=None)` is returned. In all default-mode cases checks proceed, but phase-specific behaviour (such as Elevated Warning → Error escalation) is skipped.
+
+PBH awareness is an auto-detect enhancement, not a prerequisite: harness-lint runs normally in non-PBH projects without `.harness/`.
 
 ### 3.3 Cost Accumulation (代价累积)
 
@@ -97,7 +100,12 @@ If `progress.json` is missing or malformed, `Context(phase=None)` is returned �
 
 ### 3.4 Degradation Visibility (退化可见化)
 
-When harness-lint is invoked but cannot detect itself as enabled in the project (e.g. removed dependency, disabled hook), `degradation.py` prints the cost of disabling the tool: rule count it would have run, recent violations on record, and which AGENTS.md clauses are no longer being enforced. The CLI exits 0 to avoid blocking, but the message makes the loss explicit.
+`degradation.py` provides two capabilities:
+
+- **`record_run_state(rules, violations)`** — called by `cli.run()` after every check; persists rule metadata, violation count, and de-duplicated `agente_refs` to `.harness/harness-lint-state.json`. This snapshot feeds the degradation notice below.
+- **`format_degradation_notice()`** — renders the cost of the tool being disabled (rule count, last violation count, AGENTS.md clauses no longer verified) from the recorded state.
+
+The previous behaviour of gating execution on a `.harness/harness-lint-enabled` flag file (silently `exit(0)` when absent) has been **removed**. harness-lint now always runs its checks regardless of `.harness/` presence; the degradation notice is an informational capability, not a precondition.
 
 ### 3.5 Output Formats (Reporter)
 
@@ -203,5 +211,6 @@ AGENTS.md §5 enforces an **auto-fix circuit breaker**: max 2 attempts per error
 | `.harness/progress.json` | Session state source of truth |
 | `.harness/known_pitfalls.md` | Append-only debugging knowledge log |
 | `tests/` | Test suites |
-| `Makefile` | `make verify`, `make test`, `make lint`, `make fix` |
+| `Makefile` | `make verify`, `make test`, `make lint`, `make format-check` |
+| `docs/LINT-REPORT-SCHEMA-v1.md` | `--format=json` output schema spec |
 | `CHANGELOG.md` | Keep a Changelog release notes |

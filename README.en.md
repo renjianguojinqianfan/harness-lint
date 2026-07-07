@@ -20,6 +20,7 @@ harness-lint --format json         # JSON output
 harness-lint --format summary      # One-line summary
 harness-lint --strict              # Treat warnings as exit code 1
 harness-lint --version
+python -m harness_lint             # equivalent to harness-lint
 ```
 
 Exit codes:
@@ -52,16 +53,17 @@ Every violation report carries the full **attribution-anchor triple**:
 
 | Command | Description |
 |---------|-------------|
-| `make verify` | lint + tests + coverage (must pass before commit) |
+| `make verify` | lint + format check + tests + coverage (must pass before commit) |
 | `make test` | run tests |
 | `make lint` | code style check |
-| `make fix` | auto-fix style issues |
+| `make format-check` | check code formatting (ruff format --check) |
 
 ## Project Structure
 
 ```
 harness-lint/
 ├── src/harness_lint/
+│   ├── __main__.py            # python -m harness_lint entry
 │   ├── cli.py                # CLI entry (typer)
 │   ├── checker.py            # File walker + rule dispatcher
 │   ├── reporter.py           # terminal / json / summary outputs
