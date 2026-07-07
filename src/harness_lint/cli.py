@@ -6,6 +6,7 @@ import typer
 
 from harness_lint.accumulator import PatternWarning
 from harness_lint.checker import check, collect_files
+from harness_lint.degradation import record_run_state
 from harness_lint.pbh_adapter import get_context
 from harness_lint.reporter import format_json, format_summary, format_terminal
 from harness_lint.rules import (
@@ -115,6 +116,8 @@ def run(
     files_checked = len(files)
 
     violations, pattern_warnings = check(path, context, rules)
+
+    record_run_state(rules, violations)
 
     output = _format_output(violations, files_checked, pattern_warnings, fmt, context.phase)
     typer.echo(output)

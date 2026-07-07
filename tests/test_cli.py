@@ -82,6 +82,20 @@ def test_no_violations_exits_zero(monkeypatch, tmp_path) -> None:
     assert result.exit_code == 0
 
 
+def test_run_writes_state_file(monkeypatch, tmp_path) -> None:
+    """Run should persist state to .harness/harness-lint-state.json."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "test.py").write_text("eval('1+1')", encoding="utf-8")
+    result = runner.invoke(app, ["run"])
+    assert result.exit_code == 1
+    state_file = tmp_path / ".harness" / "harness-lint-state.json"
+    assert state_file.exists()
+    data = json.loads(state_file.read_text(encoding="utf-8"))
+    assert "rules" in data
+    assert "violation_count" in data
+    assert data["violation_count"] == 1
+
+
 # --- Help and version tests ---
 
 
