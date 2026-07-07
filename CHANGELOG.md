@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-07
+
 ### Added
 
 - **`python -m harness_lint` 支持** (`src/harness_lint/__main__.py`) — 通过 Typer `app()` 派发，等价于 `harness-lint` 控制台脚本
@@ -121,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Summary 格式中 pattern_warnings 使用换行符拼接，替代管道符 `|` 拼接
 - 退化提示中 AGENTS.md 条款列表增加防御性去重
 
-[Unreleased]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/renjianguojinqianfan/harness-lint/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/renjianguojinqianfan/harness-lint/releases/tag/v0.1.0

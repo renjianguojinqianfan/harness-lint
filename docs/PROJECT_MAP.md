@@ -1,7 +1,7 @@
 ---
 project: harness-lint
 package: harness_lint
-version: "0.2.0"
+version: "0.3.0"
 map_type: static
 audience: agent
 last_updated: "2026-07-07"

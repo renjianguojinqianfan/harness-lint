@@ -4,7 +4,7 @@
 
 ```yaml
 name: harness-lint
-version: 0.2.0
+version: 0.3.0
 type: cli
 tech_stack:
   language: Python 3.11+

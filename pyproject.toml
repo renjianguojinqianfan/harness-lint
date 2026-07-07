@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "harness-lint"
-version = "0.2.0"
+version = "0.3.0"
 description = "PBH生态的第一个果实工具 — AI生成代码缺陷静态检查器"
 readme = "README.md"
 requires-python = ">=3.11"
