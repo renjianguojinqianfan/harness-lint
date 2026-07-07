@@ -6,7 +6,6 @@ import typer
 
 from harness_lint.accumulator import PatternWarning
 from harness_lint.checker import check, collect_files
-from harness_lint.degradation import format_degradation_notice, is_harness_lint_enabled
 from harness_lint.pbh_adapter import get_context
 from harness_lint.reporter import format_json, format_summary, format_terminal
 from harness_lint.rules import (
@@ -71,18 +70,6 @@ def main(
     """Harness-Lint CLI."""
 
 
-def _handle_degradation() -> None:
-    """Check if harness-lint is enabled and exit early if not."""
-    if is_harness_lint_enabled():
-        return
-    notice = format_degradation_notice()
-    if notice:
-        typer.echo(notice)
-    else:
-        typer.echo("当前未启用 Harness-Lint")
-    raise typer.Exit(code=0)
-
-
 def _format_output(
     violations: list[Violation],
     files_checked: int,
@@ -122,8 +109,6 @@ def run(
     ),
 ) -> None:
     """Run Harness-Lint against the given path."""
-    _handle_degradation()
-
     context = get_context(path)
     rules = _get_default_rules()
     files = collect_files(path)
